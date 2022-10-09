@@ -1,15 +1,17 @@
 import { ChromeStorage } from '../database/chrome_storage';
 import '../css/style.css';
+import tippy, { hideAll } from 'tippy.js';
 
-export default () => {
-  const searchPage = async () => {
-    setNovelFlag();
-    await setUserNGButton();
-    await setTagToggleButton();
-    await setTagContainer();
-    setNGButtonTagNovel();
+export const SearchPage = () => {
+  async function searchPage() {
+    console.log('content_script');
 
-    const ngUsers = await ChromeStorage.getUser();
+    // setNovelFlag();
+    // await setUserNGButton();
+    // await setTagToggleButton();
+    /*  await setTagContainer();
+    setNGButtonTagNovel(); */
+    /*   const ngUsers = await ChromeStorage.getUser();
     ngUsers.forEach((user) => {
       hideNGUserWorks(user.userId);
     });
@@ -17,8 +19,95 @@ export default () => {
     const ngTags = await ChromeStorage.getTags();
     ngTags.forEach((tag) => {
       hideNGTagWorks(tag);
-    });
-  };
+    }); */
+
+    const getUserElements = () => {
+      const targetElements = document.querySelectorAll('[aria-haspopup]');
+      if (!targetElements) return [];
+
+      const userNameElements = Array.from(targetElements).flatMap((element) => {
+        return element.querySelectorAll('a')[1];
+      });
+
+      return userNameElements;
+    };
+
+    const createBlockUserAddButton = () => {
+      const onClick = async (event: any) => {
+        const userElement = (
+          event.target as HTMLElement
+        ).parentElement?.querySelector('[href*="users"]');
+        const userId = userElement?.getAttribute('data-gtm-value') ?? '';
+        const userName =
+          userElement?.children[0]?.getAttribute('title') ??
+          userElement?.textContent ??
+          '';
+
+        await ChromeStorage.setUser({ userId, userName });
+        hideNGUserWorks(userId);
+        console.log(userId, userName);
+        console.log(userElement);
+      };
+
+      const addButtonElement = document.createElement('span');
+      addButtonElement.className = 'pf-user-ng-button';
+      addButtonElement.setAttribute('data-type', 'add');
+
+      addButtonElement.textContent = '[+]';
+
+      // addButtonElement.onclick = onClick
+      return addButtonElement;
+    };
+
+    const setBlockUserAddButton = () => {
+      getUserElements().forEach((element) => {
+        if (element.parentElement?.querySelector('.pf-user-ng-button')) return;
+        element.after(createBlockUserAddButton());
+      });
+    };
+
+    const intervalEvent = () => {
+      setInterval(() => {
+        const userElementsCount = getUserElements().length;
+        const addButtonELementsCount =
+          document.querySelectorAll('.pf-user-ng-button').length;
+
+        if (!(userElementsCount === addButtonELementsCount))
+          setBlockUserAddButton();
+
+        console.log('interval');
+      }, 1000);
+    };
+
+    intervalEvent();
+
+    // htmlElement.className = 'pf-user-ng-button';
+    /*     const instances = tippy(targetElements, {
+      appendTo: document.body,
+      content: htmlElement.innerHTML,
+      placement: 'right',
+           trigger: 'manual',
+      hideOnClick: false, 
+      interactive: true,
+      allowHTML: true,
+      triggerTarget: Array.from(liElement),
+
+         popperOptions: {
+        modifiers: [
+          {
+            name: 'preventOverflow',
+            options: {
+              rootBoundary: targetElements,
+            },
+          },
+        ],
+      }, 
+    }); */
+
+    /*     instances.forEach((instance) => {
+      instance.show();
+    }); */
+  }
 
   const setNovelFlag = () => {
     const targetElements =
@@ -204,4 +293,5 @@ export default () => {
   };
 
   searchPage();
+  return;
 };
