@@ -28,3 +28,11 @@
 li {
   position: relative;
 }
+
+div[aria-haspopup] {
+  pointer-events: none;
+}
+
+div[aria-haspopup] a {
+  pointer-events: all;
+}
