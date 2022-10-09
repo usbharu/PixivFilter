@@ -1,6 +1,5 @@
 import { ChromeStorage } from '../database/chrome_storage';
 import '../css/style.css';
-import tippy, { hideAll } from 'tippy.js';
 
 export const SearchPage = () => {
   async function searchPage() {
@@ -80,86 +79,7 @@ export const SearchPage = () => {
     };
 
     intervalEvent();
-
-    // htmlElement.className = 'pf-user-ng-button';
-    /*     const instances = tippy(targetElements, {
-      appendTo: document.body,
-      content: htmlElement.innerHTML,
-      placement: 'right',
-           trigger: 'manual',
-      hideOnClick: false, 
-      interactive: true,
-      allowHTML: true,
-      triggerTarget: Array.from(liElement),
-
-         popperOptions: {
-        modifiers: [
-          {
-            name: 'preventOverflow',
-            options: {
-              rootBoundary: targetElements,
-            },
-          },
-        ],
-      }, 
-    }); */
-
-    /*     instances.forEach((instance) => {
-      instance.show();
-    }); */
   }
-
-  const setNovelFlag = () => {
-    const targetElements =
-      document.querySelectorAll<HTMLElement>('[aria-haspopup]');
-    targetElements.forEach((element) => {
-      const childrenELementCount = element.parentElement?.childElementCount;
-      if (childrenELementCount === 1) {
-        element.setAttribute('is-novel', 'false');
-      } else {
-        element.setAttribute('is-novel', 'true');
-      }
-    });
-  };
-
-  // 各作品にNGユーザー追加ボタンを設置
-  const setUserNGButton = async () => {
-    //NGユーザー追加ボタンを生成
-    const createNGUserAddButton = () => {
-      const addButtonElement = document.createElement('span');
-      addButtonElement.className = 'pf-user-ng-button';
-      addButtonElement.setAttribute('data-type', 'add');
-
-      addButtonElement.textContent = '[+]';
-      addButtonElement.onclick = async (event) => {
-        const userElement = (
-          event.target as HTMLElement
-        ).parentElement?.querySelector('[href*="users"]');
-        const userId = userElement?.getAttribute('data-gtm-value') ?? '';
-        const userName =
-          userElement?.children[0]?.getAttribute('title') ??
-          userElement?.textContent ??
-          '';
-
-        await ChromeStorage.setUser({ userId, userName });
-        hideNGUserWorks(userId);
-        console.log(userId, userName);
-        console.log(userElement);
-      };
-      return addButtonElement;
-    };
-
-    const targetElements = document.querySelectorAll('[aria-haspopup]');
-
-    targetElements.forEach((element) => {
-      const isNovel = element.getAttribute('is-novel');
-      if (isNovel === 'false') {
-        element.parentElement?.append(createNGUserAddButton());
-      } else {
-        element.append(createNGUserAddButton());
-      }
-    });
-  };
 
   // user指定で作品を非表示にする
   const hideNGUserWorks = (ngUserId: string) => {
