@@ -33,7 +33,7 @@ const fetchWork = async (url: string) => {
   }
 };
 
-(async () => {
+/* (async () => {
   MigrateStorage();
   await ChromeStorage.setRequestFlag(false);
 
@@ -43,70 +43,96 @@ const fetchWork = async (url: string) => {
       console.log(res);
     });
   }
-})();
+})(); */
 
-chrome.runtime.onMessage.addListener((res) => {
+/* chrome.runtime.onMessage.addListener((res) => {
   console.log(res);
-});
+}); */
 
-chrome.webRequest.onCompleted.addListener(
+/*  chrome.webRequest.onCompleted.addListener(
   async (res) => {
     if (res.initiator === 'https://www.pixiv.net') {
-      const keyword = res.url.split('/')[5];
+      const keyword = res.url.split('/')[5].split('?')[0];
       console.log(keyword);
+
+      console.log(res.url);
 
       const getWorks: { [key: string]: () => Promise<object[]> } = {
         top: async () => {
           const json: SearchTop = await fetchWork(res.url);
 
           return [
-            json.body.illustManga.data,
-            json.body.novel.data,
-            json.body.popular.recent,
-            json.body.popular.permanent,
+            json.body.illustManga?.data ?? {},
+            json.body.novel?.data ?? {},
+            json.body.popular?.recent ?? {},
+            json.body.popular?.permanent ?? {},
           ].flat();
         },
         artworks: async () => {
           const json: Artworks = await fetchWork(res.url);
 
           return [
-            json.body.illustManga.data,
-            json.body.popular.recent,
-            json.body.popular.permanent,
+            json.body.illustManga?.data ?? {},
+            json.body.popular?.recent ?? {},
+            json.body.popular?.permanent ?? {},
+          ].flat();
+        },
+        illust: async () => {
+          const json: Illustrations = await fetchWork(res.url);
+
+          return [
+            json.body.thumbnails?.illust ?? {},
+            json.body.thumbnails?.novel ?? {},
           ].flat();
         },
         illustrations: async () => {
           const json: Illustrations = await fetchWork(res.url);
 
           return [
-            json.body.illust.data,
-            json.body.popular.recent,
-            json.body.popular.permanent,
+            json.body.illust?.data ?? {},
+            json.body.popular?.recent ?? {},
+            json.body.popular?.permanent ?? {},
           ].flat();
         },
         manga: async () => {
           const json: Manga = await fetchWork(res.url);
 
           return [
-            json.body.manga.data,
-            json.body.popular.recent,
-            json.body.popular.permanent,
+            json.body.thumbnails?.illust ?? {},
+            json.body.thumbnails?.novel ?? {},
+            json.body.manga?.data ?? {},
+            json.body.popular?.recent ?? {},
+            json.body.popular?.permanent ?? {},
           ].flat();
         },
         novels: async () => {
           const json: Novels = await fetchWork(res.url);
-          return json.body.novel.data;
+          return [json.body.novel?.data ?? {}].flat();
+        },
+        novel: async () => {
+          const json: Novels = await fetchWork(res.url);
+          return [
+            json.body.novel?.data ?? {},
+            json.body.thumbnails?.illust ?? {},
+
+            json.body.thumbnails?.novel ?? {},
+            json.body.thumbnails?.novelSeries ?? {},
+          ].flat();
         },
       };
 
+      const keywords = Object.keys(getWorks);
+      if (!keywords.includes(keyword)) return;
+
       const worksData = (await getWorks[keyword]()) as WorksData;
+
       await ChromeStorage.setWorksData(worksData);
       let count = 0;
       const sendMessageFunc = async (error: Error) => {
         count++;
         await new Promise((resolve) => setTimeout(resolve, 500));
         console.log(count);
-        console.log(error);
+        // console.log(error);
         return chrome.tabs.sendMessage(res.tabId, '');
       };
 
@@ -131,14 +157,8 @@ chrome.webRequest.onCompleted.addListener(
     console.log('ピクシブからのアクセスではない');
   },
   {
-    urls: [
-      'https://www.pixiv.net/ajax/search/top/*',
-      'https://www.pixiv.net/ajax/search/artworks/*',
-      'https://www.pixiv.net/ajax/search/illustrations/*',
-      'https://www.pixiv.net/ajax/search/manga/*',
-      'https://www.pixiv.net/ajax/search/novels/*',
-    ],
+    urls: ['https://www.pixiv.net/ajax/*'],
   }
-);
+); */
 
 export {};
