@@ -2,12 +2,21 @@ import { ChromeStorage } from '../database/chrome_storage';
 import '../css/style.css';
 
 export const SearchPage = () => {
+  const getUserElements = () => {
+    const targetElements = document.querySelectorAll('ul [aria-haspopup]');
+    if (!targetElements) return [];
+
+    const userNameElements: (HTMLAnchorElement | undefined)[] = Array.from(
+      targetElements
+    ).flatMap((element) => {
+      return Array.from(element.querySelectorAll('a')).slice(-1)[0];
+    });
+
+    return userNameElements;
+  };
   async function searchPage() {
     console.log('content_script');
 
-    // setNovelFlag();
-    // await setUserNGButton();
-    // await setTagToggleButton();
     /*  await setTagContainer();
     setNGButtonTagNovel(); */
     /*   const ngUsers = await ChromeStorage.getUser();
@@ -20,64 +29,63 @@ export const SearchPage = () => {
       hideNGTagWorks(tag);
     }); */
 
-    const getUserElements = () => {
-      const targetElements = document.querySelectorAll('[aria-haspopup]');
-      if (!targetElements) return [];
+    const setBlockUserAddButton = () => {
+      const createBlockUserAddButton = (left: number, top: number) => {
+        const onClick = async (event: any) => {
+          const userElement = (
+            event.target as HTMLElement
+          ).parentElement?.querySelector('[href*="users"]');
+          const userId = userElement?.getAttribute('data-gtm-value') ?? '';
+          const userName =
+            userElement?.children[0]?.getAttribute('title') ??
+            userElement?.textContent ??
+            '';
 
-      const userNameElements = Array.from(targetElements).flatMap((element) => {
-        return element.querySelectorAll('a')[1];
-      });
+          await ChromeStorage.setUser({ userId, userName });
+          // hideNGUserWorks(userId);
+          console.log(userId, userName);
+          console.log(userElement);
+        };
 
-      return userNameElements;
-    };
+        const addButtonElement = document.createElement('div');
+        addButtonElement.className = 'pf-user-ng-button';
+        addButtonElement.setAttribute('data-type', 'add');
+        addButtonElement.textContent = '[+]';
+        addButtonElement.style.left = `${left}px`;
+        addButtonElement.style.top = `${top}px`;
 
-    const createBlockUserAddButton = () => {
-      const onClick = async (event: any) => {
-        const userElement = (
-          event.target as HTMLElement
-        ).parentElement?.querySelector('[href*="users"]');
-        const userId = userElement?.getAttribute('data-gtm-value') ?? '';
-        const userName =
-          userElement?.children[0]?.getAttribute('title') ??
-          userElement?.textContent ??
-          '';
-
-        await ChromeStorage.setUser({ userId, userName });
-        hideNGUserWorks(userId);
-        console.log(userId, userName);
-        console.log(userElement);
+        addButtonElement.onclick = onClick;
+        return addButtonElement;
       };
 
-      const addButtonElement = document.createElement('span');
-      addButtonElement.className = 'pf-user-ng-button';
-      addButtonElement.setAttribute('data-type', 'add');
-
-      addButtonElement.textContent = '[+]';
-
-      // addButtonElement.onclick = onClick
-      return addButtonElement;
-    };
-
-    const setBlockUserAddButton = () => {
       getUserElements().forEach((element) => {
-        if (element.parentElement?.querySelector('.pf-user-ng-button')) return;
-        element.after(createBlockUserAddButton());
+        if (!element) return;
+
+        const userBlockButton = element
+          .closest('[aria-haspopup]')
+          ?.parentElement?.querySelector('.pf-user-ng-button');
+
+        userBlockButton?.remove();
+
+        element
+          .closest('[aria-haspopup]')
+          ?.after(
+            createBlockUserAddButton(
+              element.offsetLeft + element.clientWidth,
+              element.offsetTop
+            )
+          );
       });
     };
 
     const intervalEvent = () => {
-      setInterval(() => {
-        const userElementsCount = getUserElements().length;
-        const addButtonELementsCount =
-          document.querySelectorAll('.pf-user-ng-button').length;
-
-        if (!(userElementsCount === addButtonELementsCount))
-          setBlockUserAddButton();
+      const interval = setInterval(() => {
+        setBlockUserAddButton();
+        // setTagToggleButton();
 
         console.log('interval');
       }, 1000);
     };
-
     intervalEvent();
   }
 
@@ -169,7 +177,7 @@ export const SearchPage = () => {
   };
 
   const setTagToggleButton = async () => {
-    const createTagToggleButton = async () => {
+    const createTagToggleButton = () => {
       const toggleButtonElement = document.createElement('span');
       toggleButtonElement.className = 'pf-tag-toggle-button';
       toggleButtonElement.textContent = '▼';
@@ -190,13 +198,10 @@ export const SearchPage = () => {
       return toggleButtonElement;
     };
 
-    const targetElements = document.querySelectorAll('[aria-haspopup]');
-
-    targetElements.forEach(async (element) => {
-      const isNovel = element.getAttribute('is-novel');
-      if (isNovel === 'false') {
-        element.parentElement?.append(await createTagToggleButton());
-      }
+    getUserElements().forEach((element) => {
+      if (!element) return;
+      if (element.parentElement?.querySelector('.pf-tag-toggle-button')) return;
+      element.after(createTagToggleButton());
     });
   };
 
