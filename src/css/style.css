@@ -9,10 +9,9 @@
   width: 100%;
 }
 .pf-user-ng-button {
-  position: relative;
-  margin-right: 0.5rem;
-  margin-left: 1.5rem;
-  right: 1rem;
+  position: absolute;
+  margin-left: 0.5rem;
+  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -29,10 +28,10 @@ li {
   position: relative;
 }
 
-div[aria-haspopup] {
-  pointer-events: none;
+ul > div {
+  position: relative;
 }
 
-div[aria-haspopup] a {
-  pointer-events: all;
+div[aria-haspopup] {
+  margin-right: 2rem;
 }
