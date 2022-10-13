@@ -3,13 +3,16 @@ import '../css/style.css';
 
 export const SearchPage = () => {
   const getUserElements = () => {
-    const targetElements = document.querySelectorAll('ul [aria-haspopup]');
+    const targetElements = document.querySelectorAll<HTMLLinkElement>(
+      'ul [href^="/users/"]'
+    );
     if (!targetElements) return [];
 
-    const userNameElements: (HTMLAnchorElement | undefined)[] = Array.from(
+    const userNameElements: HTMLLinkElement[] = Array.from(
       targetElements
     ).flatMap((element) => {
-      return Array.from(element.querySelectorAll('a')).slice(-1)[0];
+      if (!element.textContent) return [];
+      return element;
     });
 
     return userNameElements;
@@ -29,9 +32,23 @@ export const SearchPage = () => {
       hideNGTagWorks(tag);
     }); */
 
-    const setBlockUserAddButton = () => {
+    const setPFWorkTag = () => {
+      const children = document.querySelectorAll('ul > *');
+
+      children.forEach((element) => {
+        if (element.classList.contains('pf-work')) return;
+        element.classList.add('pf-work');
+        const userElement = element.querySelector('[aria-haspopup]');
+        if (!userElement) return;
+        if (userElement.classList.contains('pf-userElement')) return;
+
+        userElement.classList.add('pf-userElement');
+      });
+    };
+
+    const intervalEvent = () => {
       const createBlockUserAddButton = (left: number, top: number) => {
-        const onClick = async (event: any) => {
+        const onClick = async (event: MouseEvent) => {
           const userElement = (
             event.target as HTMLElement
           ).parentElement?.querySelector('[href*="users"]');
@@ -51,38 +68,114 @@ export const SearchPage = () => {
         addButtonElement.className = 'pf-user-ng-button';
         addButtonElement.setAttribute('data-type', 'add');
         addButtonElement.textContent = '[+]';
-        addButtonElement.style.left = `${left}px`;
+        // addButtonElement.style.left = `${left}px`;
         addButtonElement.style.top = `${top}px`;
 
         addButtonElement.onclick = onClick;
         return addButtonElement;
       };
 
-      getUserElements().forEach((element) => {
-        if (!element) return;
+      const createTagToggleButton = (top: number) => {
+        const onClick = (event: MouseEvent) => {
+          const selectedTagContainer = (event.target as HTMLElement)
+            .closest('.pf-work')
+            ?.querySelector<HTMLElement>('.pf-tag-container');
 
-        const userBlockButton = element
-          .closest('[aria-haspopup]')
-          ?.parentElement?.querySelector('.pf-user-ng-button');
+          if (!selectedTagContainer) return;
+          if (toggleButtonElement.textContent === '▼') {
+            toggleButtonElement.textContent = '▲';
+            selectedTagContainer.style.display = '';
+          } else {
+            toggleButtonElement.textContent = '▼';
+            selectedTagContainer.style.display = 'none';
+          }
+        };
 
-        userBlockButton?.remove();
+        const toggleButtonElement = document.createElement('div');
+        toggleButtonElement.className = 'pf-tag-toggle-button';
+        toggleButtonElement.textContent = '▼';
 
-        element
-          .closest('[aria-haspopup]')
-          ?.after(
-            createBlockUserAddButton(
-              element.offsetLeft + element.clientWidth,
-              element.offsetTop
-            )
-          );
-      });
-    };
+        toggleButtonElement.style.top = `${top}px`;
+        toggleButtonElement.onclick = onClick;
+        return toggleButtonElement;
+      };
 
-    const intervalEvent = () => {
-      const interval = setInterval(() => {
-        setBlockUserAddButton();
-        // setTagToggleButton();
+      const createTagNGButton = (tag: string) => {
+        const onClick = async (event: MouseEvent) => {
+          console.log(event.target);
+          /*   await ChromeStorage.setTag(tag);
+          hideNGTagWorks(tag); */
+          return;
+        };
 
+        const spanElementTagNgButton = document.createElement('div');
+        spanElementTagNgButton.className = 'pf-tag-ng-button';
+        spanElementTagNgButton.setAttribute('data-type', 'add');
+        spanElementTagNgButton.setAttribute('data-tag-name', tag);
+        spanElementTagNgButton.textContent = '[+]';
+        spanElementTagNgButton.onclick = onClick;
+        return spanElementTagNgButton;
+      };
+
+      const createTagContainer = (worksTags: string[]) => {
+        const divElement = document.createElement('div');
+        divElement.className = 'pf-tag-container';
+        divElement.style.display = 'none';
+        worksTags.forEach((tag) => {
+          const pElement = document.createElement('p');
+          pElement.className = 'pf-work-tag';
+
+          const aElement = document.createElement('a');
+          aElement.className = 'pf-work-tag-link';
+          aElement.target = '-blank';
+          aElement.href = `https://www.pixiv.net/tags/${tag}`;
+          aElement.textContent = tag;
+
+          const spanElementTagNgButton = createTagNGButton(tag);
+
+          pElement.appendChild(aElement);
+          pElement.appendChild(spanElementTagNgButton);
+
+          divElement.appendChild(pElement);
+        });
+        return divElement;
+      };
+
+      const getTags = (workId: string) => {
+        return [workId];
+      };
+
+      setInterval(() => {
+        setPFWorkTag();
+        getUserElements().forEach((element) => {
+          if (!element) return;
+
+          const left = element.offsetLeft;
+          const top = element.offsetTop;
+          const width = element.offsetWidth;
+          if (!(left | top | width)) return;
+
+          if (
+            element
+              .closest('[aria-haspopup]')
+              ?.parentElement?.querySelector('.pf-user-ng-button')
+          )
+            return;
+          element
+            .closest('[aria-haspopup]')
+            ?.after(
+              createBlockUserAddButton(
+                element.offsetLeft + element.offsetWidth,
+                top
+              )
+            );
+
+          element.closest('[aria-haspopup]')?.after(createTagToggleButton(top));
+
+          element
+            .closest('.pf-work')
+            ?.append(createTagContainer(getTags(element.textContent ?? '')));
+        });
         console.log('interval');
       }, 1000);
     };
@@ -114,98 +207,7 @@ export const SearchPage = () => {
     });
   };
 
-  const createTagNGButton = (tag: string) => {
-    const spanElementTagNgButton = document.createElement('span');
-    spanElementTagNgButton.className = 'pf-tag-ng-button';
-    spanElementTagNgButton.setAttribute('data-type', 'add');
-    spanElementTagNgButton.setAttribute('data-tag-name', tag);
-    spanElementTagNgButton.textContent = '[+]';
-    spanElementTagNgButton.onclick = async (event) => {
-      console.log(event.target);
-      await ChromeStorage.setTag(tag);
-      hideNGTagWorks(tag);
-      return;
-    };
-    return spanElementTagNgButton;
-  };
-
-  //タグコンテナを作成する
-  const createTagContainer = (worksTags: string[]) => {
-    const divElement = document.createElement('div');
-    divElement.className = 'pf-tag-container';
-    divElement.style.display = 'none';
-    worksTags.forEach((tag) => {
-      const pElement = document.createElement('p');
-      pElement.className = 'pf-work-tag';
-
-      const aElement = document.createElement('a');
-      aElement.className = 'pf-work-tag-link';
-      aElement.target = '-blank';
-      aElement.href = `https://www.pixiv.net/tags/${tag}`;
-      aElement.textContent = tag;
-
-      const spanElementTagNgButton = createTagNGButton(tag);
-
-      pElement.appendChild(aElement);
-      pElement.appendChild(spanElementTagNgButton);
-
-      divElement.appendChild(pElement);
-    });
-    return divElement;
-  };
-
-  const setTagContainer = async () => {
-    const getLiElement = (workId: string) => {
-      const aElements = document.querySelectorAll(
-        `[data-gtm-value="${workId}"]`
-      );
-
-      const LiElements = Array.from(aElements).flatMap((element) => {
-        return element.closest('li') ?? [];
-      });
-
-      return LiElements;
-    };
-    const worksData = await ChromeStorage.getWorksData();
-    worksData.forEach((workData) => {
-      const LiElements = getLiElement(workData.id);
-      LiElements.forEach((element) => {
-        element.append(createTagContainer(workData.tags));
-      });
-    });
-    return;
-  };
-
-  const setTagToggleButton = async () => {
-    const createTagToggleButton = () => {
-      const toggleButtonElement = document.createElement('span');
-      toggleButtonElement.className = 'pf-tag-toggle-button';
-      toggleButtonElement.textContent = '▼';
-      toggleButtonElement.onclick = (event) => {
-        const selectedTagContainer = (event.target as HTMLElement)
-          .closest('li')
-          ?.querySelector<HTMLElement>('.pf-tag-container');
-
-        if (!selectedTagContainer) return;
-        if (toggleButtonElement.textContent === '▼') {
-          toggleButtonElement.textContent = '▲';
-          selectedTagContainer.style.display = '';
-        } else {
-          toggleButtonElement.textContent = '▼';
-          selectedTagContainer.style.display = 'none';
-        }
-      };
-      return toggleButtonElement;
-    };
-
-    getUserElements().forEach((element) => {
-      if (!element) return;
-      if (element.parentElement?.querySelector('.pf-tag-toggle-button')) return;
-      element.after(createTagToggleButton());
-    });
-  };
-
-  const setNGButtonTagNovel = () => {
+  /*   const setNGButtonTagNovel = () => {
     const aElements = document.querySelectorAll(
       '.gtm-novel-searchpage-result-tag'
     );
@@ -215,7 +217,7 @@ export const SearchPage = () => {
       if (!tag) return;
       element.closest('span')?.append(createTagNGButton(tag));
     });
-  };
+  }; */
 
   searchPage();
   return;
