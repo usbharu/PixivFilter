@@ -3,6 +3,7 @@
   right: 0px;
   cursor: pointer;
   user-select: none;
+  font-size: 1rem;
 }
 
 .pf-users-container {
@@ -10,6 +11,7 @@
 }
 .pf-user-ng-button {
   position: absolute;
+  right: 1.5rem;
   margin-left: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
@@ -33,5 +35,9 @@ ul > div {
 }
 
 div[aria-haspopup] {
-  margin-right: 2rem;
+  margin-right: 3.5rem;
+}
+
+.pf-work-tag {
+  display: flex;
 }
