@@ -141,14 +141,16 @@ export const SearchPage = () => {
         return divElement;
       };
 
-      const getTags = (workId: string) => {
-        return [workId];
-      };
-
       setInterval(() => {
         setPFWorkTag();
-        getUserElements().forEach((element) => {
+        getUserElements().forEach(async (element) => {
           if (!element) return;
+
+          const workId = element
+            .closest('.pf-work')
+            ?.querySelector('[width] [data-gtm-value]')
+            ?.getAttribute('data-gtm-value');
+          if (!workId) return;
 
           const left = element.offsetLeft;
           const top = element.offsetTop;
@@ -174,7 +176,9 @@ export const SearchPage = () => {
 
           element
             .closest('.pf-work')
-            ?.append(createTagContainer(getTags(element.textContent ?? '')));
+            ?.append(
+              createTagContainer(await ChromeStorage.getWorkTags(workId))
+            );
         });
         console.log('interval');
       }, 1000);
