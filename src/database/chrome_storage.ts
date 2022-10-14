@@ -66,8 +66,14 @@ const getWorksData: () => Promise<WorksData> = async () => {
   return (await chrome.storage.local.get('worksData')).worksData;
 };
 
+const getWorkTags = async (workId: string): Promise<string[]> => {
+  const worksData = await getWorksData();
+  const targetTags = worksData.find((e) => e.id === workId)?.tags ?? [];
+  return targetTags;
+};
+
 const setTag = async (tag: string) => {
-  const savedTags = await ChromeStorage.getTags();
+  const savedTags = await ChromeStorage.getBlockTags();
   console.log(savedTags);
 
   if (!savedTags) {
@@ -83,7 +89,7 @@ const setTag = async (tag: string) => {
   return;
 };
 
-const getTags = async () => {
+const getBlockTags = async () => {
   const savedTags: string[] | undefined = (
     await chrome.storage.local.get('blockTags')
   ).blockTags;
@@ -93,7 +99,7 @@ const getTags = async () => {
 };
 
 const removeTags = async (blockTags: string[]) => {
-  const savedTags = await ChromeStorage.getTags();
+  const savedTags = await ChromeStorage.getBlockTags();
   if (!savedTags) return [];
 
   const newTags = savedTags
@@ -119,7 +125,8 @@ export const ChromeStorage = {
   removeUser,
   setWorksData,
   getWorksData,
+  getWorkTags,
   setTag,
-  getTags,
+  getBlockTags,
   removeTags,
 };
