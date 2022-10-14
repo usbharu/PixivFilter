@@ -49,7 +49,7 @@ const fetchWork = async (url: string) => {
   console.log(res);
 }); */
 
-/*  chrome.webRequest.onCompleted.addListener(
+chrome.webRequest.onCompleted.addListener(
   async (res) => {
     if (res.initiator === 'https://www.pixiv.net') {
       const keyword = res.url.split('/')[5].split('?')[0];
@@ -127,26 +127,7 @@ const fetchWork = async (url: string) => {
       const worksData = (await getWorks[keyword]()) as WorksData;
 
       await ChromeStorage.setWorksData(worksData);
-      let count = 0;
-      const sendMessageFunc = async (error: Error) => {
-        count++;
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log(count);
-        // console.log(error);
-        return chrome.tabs.sendMessage(res.tabId, '');
-      };
 
-      Promise.reject()
-        .catch(sendMessageFunc)
-        .catch(sendMessageFunc)
-        .catch(sendMessageFunc)
-        .catch(sendMessageFunc)
-
-        .then(() => {
-          count = 0;
-          console.log(count);
-          console.log('成功');
-        });
       console.log(worksData);
 
       console.log(res);
@@ -159,6 +140,6 @@ const fetchWork = async (url: string) => {
   {
     urls: ['https://www.pixiv.net/ajax/*'],
   }
-); */
+);
 
 export {};
